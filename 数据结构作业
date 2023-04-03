@@ -1,0 +1,71 @@
+#include <iostream>
+#define MAX_SIZE 100
+typedef int		EleType;
+typedef struct {
+	EleType data[MAX_SIZE];
+	int		top;
+} SqStack;
+
+int InitStack(SqStack & s){
+	s.top = -1;
+	return 0;
+}
+bool IsEmpty(SqStack & s){
+	return s.top == -1;
+}
+bool IsFull(SqStack & s){
+	return s.top == MAX_SIZE-1;
+}
+int Push(SqStack & s, EleType x){
+	if( IsFull(s) ) return 1;
+	s.top ++;
+	s.data[ s.top ] = x;
+	return 0;
+}
+int Pop(SqStack & s, EleType & x){
+	if( IsEmpty(s) ) return 1;
+	x = s.data[ s.top ];
+	s.top --;
+	return 0;
+}
+int Top(SqStack & s, int & x){
+	if( IsEmpty(s) ) return 1;
+	x = s.data[ s.top ];
+	return 0;
+}
+
+int main()
+{
+	int i, j, x, n=5;
+	//int a[] = { 2, 1, 5, 4, 3 };
+	//int a[] = { 5, 1, 2, 3, 4 };
+
+	int a[MAX_SIZE] ;
+	std::cout << "input number : ";
+	std::cin  >> n;
+	std::cout << "input sequential: \n";
+	for(i=0; i<n; ++i){
+		std::cin >> a[i];
+	}
+
+	SqStack s;
+	InitStack(s);
+
+	for(i=1, j=0; i<=n; ++i){
+		Push(s,i);	std::cout << "Push(" << i << ")\n";
+		while( ! IsEmpty(s) ){
+			Top(s, x);
+			if( x == a[j] ){
+				Pop(s, x);	std::cout <<"Pop("<< x << ")\n";
+				j++;
+			} else {
+				break;
+			}
+		}
+	}
+
+	if( IsEmpty(s) ) std::cout << "OK\n";
+	else			 std::cout << "Impossible\n";
+
+	return 0;
+}
