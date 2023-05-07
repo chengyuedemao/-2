@@ -1,0 +1,86 @@
+#include <iostream>
+#include <string>
+
+typedef struct BTNode {
+	char 	data;
+	struct 	BTNode *lchild, *rchild;
+} BTNode;
+
+// 查找字符串 s 的 [begin_pos, end_pos] 区间中左子树与右子树的分割符 ','
+int split_position(std::string s, int begin_pos, int end_pos)
+{
+	int counter = 0, i;
+	for (i = begin_pos; i <= end_pos; i++)
+	{
+		if      (s[i] == '(')  ++counter;     
+		else if (s[i] == ')')  --counter;     
+
+		if (counter == 0 && s[i] == ',') break;    
+	}
+	return i;
+}
+
+// 从字符串 s 的 [begin_pos, end_pos] 区间创建一颗树，返回指向树根的指针
+BTNode* create_bt(std::string s, int begin_pos, int end_pos)
+{
+	if (begin_pos > end_pos)  return NULL;
+	// 括号表达式第一个字符肯定是根
+	BTNode* root = (BTNode*)malloc(sizeof(BTNode));
+	root->data = s[begin_pos];
+
+	if (begin_pos == end_pos)
+	{
+		// 区间长度为 1，则为叶子节点
+		root->lchild = root->rchild = NULL;
+	}
+	else
+	{
+		// 区间长度大于 1，则存在子树
+		// 找出左右子树的分界点，在原字符串中剔除：字符串区间头部的 根和'('，以及区间末尾的 ')'
+		int split_pos = split_position(s, begin_pos + 2, end_pos - 1);
+		root->lchild = create_bt(s, begin_pos + 2, split_pos - 1);     
+		root->rchild = create_bt(s, split_pos + 1, end_pos - 1);       
+	}
+	return root;
+}
+
+// 递归输出二叉树中的所有节点信息，每一行格式为：根、左孩子、右孩子
+// Root: X  L: Y  R: Z
+void disp_bt(BTNode* bt)
+{
+	if (bt == NULL) return;
+	std::cout 	<< "Root: " << bt->data
+				<< "   L: "	<< (bt->lchild ? bt->lchild->data : ' ')
+				<< "   R: "	<< (bt->rchild ? bt->rchild->data : ' ')
+				<< std::endl;
+
+	disp_bt(bt->lchild); disp_bt(bt->rchild);
+}
+
+void export_bt(BTNode* bt)
+{
+	if(bt == NULL) return;
+	std::cout << bt->data;
+	if( bt->lchild || bt->rchild ){
+		std::cout << "(";
+		export_bt(bt->lchild);
+		if( bt->rchild ){
+			std::cout << ",";
+			export_bt(bt->rchild);
+		}
+		std::cout << ")";
+	}
+}
+
+int main()
+{
+	std::string str_bt;
+	std::cout << "input expression:\n";
+	std::cin >> str_bt;
+	BTNode* root;
+	root = create_bt(str_bt, 0, str_bt.length() - 1);   
+	disp_bt(root);
+	
+	export_bt(root);  std::cout << std::endl;
+	return 0;
+}
