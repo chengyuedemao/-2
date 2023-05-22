@@ -1,0 +1,138 @@
+#include <iostream>
+#include <algorithm>
+#include <vector>
+#include <string>
+#define NUM_CHARS 29
+
+typedef struct {
+    int         parent, lchild, rchild;
+    double      weight;
+} HTNode;
+
+typedef struct {
+    char        data;
+    double      weight;
+    std::string huffman_code;
+} CHNode;
+
+void create_huffman_tree(std::vector<HTNode>& huffman_tree, std::vector<CHNode>& char_input)
+{
+    for (int i = 0; i < 2 * NUM_CHARS - 1; ++i) {             //初始化所有节点，2n-1
+        huffman_tree[i].parent = huffman_tree[i].lchild = huffman_tree[i].rchild = -1;
+    }
+    for (int i = 0; i < NUM_CHARS; ++i) {                 //初始化 n 个叶子结点的权值
+        huffman_tree[i].weight = char_input[i].weight;
+    }
+    for (int i = NUM_CHARS; i < 2 * NUM_CHARS - 1; ++i) {     // 构造哈夫曼树
+        int s1 = -1, s2 = -1;
+        for (int j = 0; j < i; j++) {                    // 找两个最小的树
+            if (huffman_tree[j].parent == -1 && s1 == -1) {
+                s1 = j;
+            }
+            else if (huffman_tree[j].parent == -1 && s1 != -1 && s2 == -1) {
+                (huffman_tree[j].weight < huffman_tree[s1].weight) ? (s2 = s1, s1 = j) : (s2 = j);
+            }
+            else if (huffman_tree[j].parent == -1 && (huffman_tree[j].weight < huffman_tree[s1].weight || huffman_tree[j].weight < huffman_tree[s2].weight)) {
+                (huffman_tree[j].weight < huffman_tree[s1].weight) ? (s2 = s1, s1 = j) : (s2 = j);
+            }
+        }
+        huffman_tree[i].weight = huffman_tree[s1].weight + huffman_tree[s2].weight;
+        huffman_tree[s1].parent = i;      huffman_tree[i].lchild = s1;
+        huffman_tree[s2].parent = i;      huffman_tree[i].rchild = s2;
+    }
+}
+
+void encode_for_char(std::vector<HTNode>& huffman_tree, std::vector<CHNode>& char_input)
+{
+    for (int i = 0; i < NUM_CHARS; i++) {
+        int child, parent;
+        std::string code_reverse = "";
+        for (child = i, parent = huffman_tree[i].parent; parent != -1; child = parent, parent = huffman_tree[child].parent) {
+            (huffman_tree[parent].lchild == child) ? (code_reverse += '0') : (code_reverse += '1');
+        }
+        char_input[i].huffman_code += std::string(code_reverse.rbegin(), code_reverse.rend());
+    }
+}
+void encode_for_str(std::vector<CHNode>& char_input);
+void decode_for_str(std::vector<HTNode>& huffman_tree, std::vector<CHNode>& char_input);
+
+int main()
+{
+    int     i;
+    char    aChar;
+    double  weight[NUM_CHARS] = { 8.19, 1.47, 3.83, 3.91, 12.25, 2.26, 1.71, 4.57, 7.10, 0.14,
+                                    0.41, 3.77, 3.34, 7.06,  7.26, 2.89, 0.09, 6.85, 6.36, 9.41,
+                                    2.58, 1.09, 1.59, 0.21,  1.58, 0.08, 3.30, 2.90, 3.10 };
+
+    std::vector<CHNode> char_input(NUM_CHARS);
+    std::vector<HTNode> huffman_tree(2 * NUM_CHARS - 1);
+    for (i = 0, aChar = 'A'; i < 26; ++i, ++aChar) {
+        char_input[i].data = aChar;
+        char_input[i].weight = weight[i];
+        std::cout << "data: " << char_input[i].data << " weight: " << char_input[i].weight << std::endl;
+    }
+    for (i = 26; i < NUM_CHARS; ++i) {
+        if (i == 26) { char_input[i].data = ' ';  char_input[i].weight = weight[i]; }
+        else if (i == 27) { char_input[i].data = ',';  char_input[i].weight = weight[i]; }
+        else if (i == 28) { char_input[i].data = '.';  char_input[i].weight = weight[i]; }
+    }
+
+    std::cout << std::endl << "Creating huffman tree ..." << std::endl;
+    create_huffman_tree(huffman_tree, char_input);
+
+    std::cout << std::endl << "Encoding characters ..." << std::endl;
+    encode_for_char(huffman_tree, char_input);
+    for (i = 0; i < NUM_CHARS; i++)
+        std::cout << char_input[i].data << " : " << char_input[i].huffman_code << std::endl;
+
+    encode_for_str(char_input);
+    decode_for_str(huffman_tree, char_input);
+
+    return 0;
+}
+
+void encode_for_str(std::vector<CHNode>& char_input)
+{
+    std::string in_str, out_str;
+    std::cout << "\nInput string for encoding: ";
+    //std::cin >> in_str;
+    getline(std::cin, in_str);
+    std::cout << "in_str: " << in_str << std::endl;
+    std::transform(in_str.begin(), in_str.end(), in_str.begin(), ::toupper);
+    for (int i = 0; i < in_str.size(); ++i) {
+        switch (in_str[i]) {
+        case ' ':   out_str += char_input[26].huffman_code;                 break;
+        case ',':   out_str += char_input[27].huffman_code;                 break;
+        case '.':   out_str += char_input[28].huffman_code;                 break;
+        default:    out_str += char_input[in_str[i] - 'A'].huffman_code;    break;
+        }
+    }
+    std::cout << in_str << " : " << out_str << std::endl;
+}
+void decode_for_str(std::vector<HTNode>& huffman_tree, std::vector<CHNode>& char_input)
+{
+    std::string in_str, out_str;
+    std::cout << "\nInput string for decoding: ";
+    std::cin >> in_str;
+    int aNode, child, parent;
+    for (int i = 0; i < in_str.size(); ) {
+        for (aNode = 2 * NUM_CHARS - 1 - 1; aNode >= NUM_CHARS; ++i) {
+            // 沿着根到叶子的一条路径进行解码
+            if (in_str[i] == '0')  aNode = huffman_tree[aNode].lchild;
+            else                   aNode = huffman_tree[aNode].rchild;
+        }
+        out_str += char_input[aNode].data;
+
+        //child = 2*NUM_CHARS-1 -1;               // 根
+        //while(1){
+        //    parent = child;
+        //    if( in_str[i] == '0' )  child = huffman_tree[parent].lchild;
+        //    else                    child = huffman_tree[parent].rchild;
+        //    ++i;
+        //    if( child < NUM_CHARS )       break;
+        //}
+        //out_str += char_input[child].data;
+    }
+    std::cout << in_str << " : " << out_str << std::endl;
+}
+
