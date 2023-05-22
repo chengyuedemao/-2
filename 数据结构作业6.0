@@ -1,0 +1,57 @@
+#include <stdio.h>
+#define MAX_NUM 100
+int visite[MAX_NUM];
+struct MGraph 
+{
+	int vexs[MAX_NUM];
+	int arcs[MAX_NUM][MAX_NUM];
+	int vexnum, arcnum;
+};
+void XX(struct MGraph G, int v, int* count)
+{
+	visite[v] = 1;
+	printf("%d", G.vexs[v]);
+	for (int i = 0; i < G.vexnum; ++i)
+	{
+		if (G.arcs[v][i] && !visite[i])
+		{
+			XX(G, i, count);
+		}
+	}
+}
+void XXXraverse(struct MGraph G) 
+{
+	int count = 0;
+	for (int i = 0; i < G.vexnum; ++i)
+	{
+		if (!visite[i])
+		{
+			printf("连通分量%d:",++count);
+			XX(G,i,&count);
+			printf("\n");
+		}
+	}
+}
+int main() 
+{
+	struct MGraph G =
+	{
+		{0, 1, 2, 3, 4, 5, 6, 7},
+		{
+			{0,1,1,1,0,0,0,0},
+			{1,0,0,0,1,0,0,0},
+			{1,0,0,0,0,0,0,0},
+			{1,0,0,0,0,0,0,0},
+			{0,1,0,0,0,0,0,0},
+			{0,0,0,0,0,0,0,0},
+			{0,0,0,0,0,0,0,1},
+			{0,0,0,0,0,0,1,0},
+		},
+		8,
+		8
+	};
+		XXXraverse(G);
+
+		return 0;
+
+}
